@@ -21,6 +21,11 @@ export default defineNuxtConfig({
         provider: 'google',
         weights: [200, 300, 400, 500, 600, 700, 800, 900],
       },
+      {
+        name: 'Nunito',
+        provider: 'google',
+        weights: [200, 300, 400, 500, 600, 700, 800, 900],
+      },
     ],
   },
   shadcn: {

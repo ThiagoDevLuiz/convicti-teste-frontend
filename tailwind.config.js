@@ -12,6 +12,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Nunito Sans', 'sans-serif'],
+        nunito: ['Nunito', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',
