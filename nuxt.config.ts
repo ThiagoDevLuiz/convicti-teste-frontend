@@ -2,18 +2,27 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   srcDir: 'src/',
-
   app: {
     head: {
-      title: 'Meu Projeto Nuxt 3',
+      title: 'CONVICTI Tecnologia e Desenvolvimento de Sistemas',
       meta: [
-        { name: 'description', content: 'Um projeto Nuxt 3 bem organizado' },
+        {
+          name: 'description',
+          content: 'Tecnologia e Desenvolvimento de Sistemas',
+        },
       ],
     },
   },
-
   modules: ['@nuxt/fonts', '@nuxt/image', '@nuxtjs/tailwindcss', 'shadcn-nuxt'],
-
+  fonts: {
+    families: [
+      {
+        name: 'Nunito Sans',
+        provider: 'google',
+        weights: [200, 300, 400, 500, 600, 700, 800, 900],
+      },
+    ],
+  },
   shadcn: {
     /**
      * Prefix for all the imported components
