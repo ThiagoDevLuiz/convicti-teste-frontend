@@ -9,7 +9,7 @@
           open ? 'xl:pl-64' : 'xl:pl-20',
         )
       ">
-      <main class="w-[90%] m-auto pb-10 overflow-x-hidden">
+      <main class="w-[95%] xl:w-[90%] mx-auto pt-8 pb-10 overflow-x-hidden">
         <Sheet>
           <SheetTrigger class="xl:hidden">
             <Menu class="w-[1.35rem] h-[1.35rem] text-[#2F4565]" />

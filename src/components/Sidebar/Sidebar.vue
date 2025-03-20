@@ -7,9 +7,15 @@
       )
     ">
     <div
-      class="absolute cursor-pointer -right-12 top-6 rounded-lg p-1.5 duration-300 hover:bg-card-foreground"
+      class="absolute cursor-pointer -right-7 top-9 rounded-r-lg p-1.5 duration-300 bg-card border-r border-border"
       @click="$emit('update:open', !open)">
-      <PanelLeft class="w-[1.35rem] h-[1.35rem] text-[#2F4565]" />
+      <ChevronLeft
+        :class="
+          cn(
+            'w-[1.35rem] h-[1.35rem] text-[#2F4565] transition-transform',
+            !open && 'rotate-180',
+          )
+        " />
     </div>
 
     <NuxtLink to="/dashboard">
@@ -162,7 +168,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { PanelLeft, Settings } from 'lucide-vue-next';
+import { ChevronLeft, PanelLeft, Settings } from 'lucide-vue-next';
 import {
   Tooltip,
   TooltipContent,
@@ -173,7 +179,7 @@ import { Button } from '@/components/ui/button';
 import AppImages from '~~/public/images';
 import { cn } from '~/lib/utils';
 
-const props = defineProps<{
+defineProps<{
   open: boolean;
 }>();
 
