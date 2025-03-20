@@ -173,14 +173,13 @@ import { Button } from '@/components/ui/button';
 import AppImages from '~~/public/images';
 import { cn } from '~/lib/utils';
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-});
+const props = defineProps<{
+  open: boolean;
+}>();
 
-defineEmits(['update:open']);
+defineEmits<{
+  'update:open': [value: boolean];
+}>();
 
 const route = useRoute();
 
@@ -194,6 +193,7 @@ const sidebarItems = [
 ];
 
 function logout() {
-  // Lógica de logout aqui
+  // TODO: Implementar lógica de logout
+  console.log('Logout acionado');
 }
 </script>
