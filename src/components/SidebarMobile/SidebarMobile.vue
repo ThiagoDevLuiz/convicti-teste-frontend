@@ -86,15 +86,6 @@ import { Button } from '@/components/ui/button';
 import AppImages from '~~/public/images';
 import { cn } from '~/lib/utils';
 
-const props = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-});
-
-defineEmits(['update:open']);
-
 const route = useRoute();
 
 const sidebarItems = [
