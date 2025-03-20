@@ -10,6 +10,12 @@
         )
       ">
       <main class="w-[90%] m-auto pb-10 overflow-x-hidden">
+        <Sheet>
+          <SheetTrigger class="xl:hidden">
+            <Menu class="w-[1.35rem] h-[1.35rem] text-[#2F4565]" />
+          </SheetTrigger>
+          <SidebarMobile />
+        </Sheet>
         <slot />
       </main>
     </div>
@@ -19,6 +25,7 @@
 <script setup>
 import { ref } from 'vue';
 import { cn } from '~/lib/utils';
+import { Menu } from 'lucide-vue-next';
 
 const open = ref(true);
 </script>
