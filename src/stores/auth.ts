@@ -34,7 +34,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
 
       try {
-        // Usando a URL local para o proxy, não a URL remota
         console.log('Iniciando processo de autenticação');
 
         const payload: AuthRequestPayload = {
@@ -61,10 +60,7 @@ export const useAuthStore = defineStore('auth', {
       } catch (error: any) {
         console.error('Erro completo de autenticação:', error);
 
-        if (error.message && error.message.includes('CORS')) {
-          this.error =
-            'Erro de conectividade com o servidor. Problema de CORS.';
-        } else if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
           this.error = 'Credenciais inválidas. Verifique seu e-mail e senha.';
         } else if (error.message && error.message.includes('Network Error')) {
           this.error = 'Erro de rede. Verifique sua conexão com a internet.';
@@ -110,19 +106,26 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async fetchUserProfile() {
-      // Aqui você deve implementar a chamada para obter os dados do usuário
-      // utilizando o token de acesso
+      if (!this.token) return;
 
       try {
-        // Este é um exemplo provisório, substitua pela chamada real à API
-        this.user = {
-          id: 1,
-          name: 'Junior Luiz',
-          email: 'junior@convicti.com.br',
-          role: 'Admin',
-        };
-      } catch (error) {
+        // Aqui você deve implementar a chamada para obter os dados do usuário
+        // usando o composable global de $fetch
+        const { $fetchWithAuth } = useNuxtApp();
+
+        // Ajuste esta URL para o endpoint correto do perfil do usuário
+        const userData = (await $fetchWithAuth('/user/profile')) as User;
+
+        this.user = userData;
+      } catch (error: any) {
         console.error('Erro ao obter perfil do usuário:', error);
+        // Se houver erro 401, tentar atualizar o token e tentar novamente
+        if (error.response?.status === 401) {
+          const success = await this.updateToken();
+          if (success) {
+            this.fetchUserProfile();
+          }
+        }
       }
     },
 

@@ -36,7 +36,10 @@ export default defineNuxtPlugin(() => {
           try {
             const config = useRuntimeConfig();
             const baseUrl = config.public.apiBaseUrl;
-            const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+            // Verificamos se a URL já é completa ou precisamos concatenar com o baseUrl
+            const fullUrl = url.startsWith('http')
+              ? url
+              : `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
 
             // Adicionar cabeçalhos de autenticação se o token existir
             if (authStore.token) {
@@ -90,7 +93,9 @@ export default defineNuxtPlugin(() => {
         // No servidor, apenas passa a requisição sem autenticação
         const config = useRuntimeConfig();
         const baseUrl = config.public.apiBaseUrl;
-        const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+        const fullUrl = url.startsWith('http')
+          ? url
+          : `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
         return await $fetch(fullUrl, options);
       },
     },
