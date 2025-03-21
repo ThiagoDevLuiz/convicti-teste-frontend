@@ -13,7 +13,51 @@ export default defineNuxtConfig({
       ],
     },
   },
-  modules: ['@nuxt/fonts', '@nuxt/image', '@nuxtjs/tailwindcss', 'shadcn-nuxt'],
+  modules: [
+    '@nuxt/fonts',
+    '@nuxt/image',
+    '@nuxtjs/tailwindcss',
+    'shadcn-nuxt',
+    '@pinia/nuxt',
+  ],
+  nitro: {
+    // Configuração para resolver problemas de CORS
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        cookieDomainRewrite: { '*': '' },
+        headers: {
+          Origin: 'http://localhost:3000',
+        },
+        // Não gerar novos caminhos
+        prependPath: false,
+      },
+      '/oauth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        cookieDomainRewrite: { '*': '' },
+        headers: {
+          Origin: 'http://localhost:3000',
+        },
+        // Não gerar novos caminhos
+        prependPath: false,
+      },
+    },
+  },
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: '/api',
+      apiAuthUrl: '/oauth/token',
+      clientId: process.env.CLIENT_ID || '9e78719e-598a-417a-9ca0-2902c29b0e43',
+      clientSecret:
+        process.env.CLIENT_SECRET || 'FHu2Csyy7Wb2VdKDGKPOh8RkUOiugg1xIBBTvWSj',
+    },
+  },
+  ssr: false,
+  build: {
+    transpile: ['@pinia/nuxt'],
+  },
   fonts: {
     families: [
       {

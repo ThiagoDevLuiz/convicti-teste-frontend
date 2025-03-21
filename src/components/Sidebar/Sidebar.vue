@@ -168,38 +168,34 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { ChevronLeft, PanelLeft, Settings } from 'lucide-vue-next';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
-import AppImages from '~~/public/images';
+import { Settings, ChevronLeft } from 'lucide-vue-next';
 import { cn } from '~/lib/utils';
+import AppImages from '~~/public/images';
+import { useAuthStore } from '~/stores/auth';
 
-defineProps<{
-  open: boolean;
-}>();
+const authStore = useAuthStore();
 
-defineEmits<{
-  'update:open': [value: boolean];
-}>();
+const props = defineProps({
+  open: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+defineEmits(['update:open']);
 
 const route = useRoute();
 
 const sidebarItems = [
   {
     id: 1,
-    label: 'Dashboard',
     path: '/dashboard',
+    label: 'Dashboard',
     icon: AppImages.DashboardIcon,
   },
 ];
 
-function logout() {
-  // TODO: Implementar lógica de logout
-  console.log('Logout acionado');
-}
+const logout = () => {
+  authStore.logout();
+};
 </script>

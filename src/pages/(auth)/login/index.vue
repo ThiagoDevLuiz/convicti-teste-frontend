@@ -6,7 +6,7 @@
       <div>
         <h1 class="text-2xl font-bold">Bem-vindo de Volta</h1>
         <p class="text-sm text-muted-foreground font-medium">
-          Insira sua credenciais para acessar a plataforma
+          Insira suas credenciais para acessar a plataforma
         </p>
       </div>
 
@@ -43,7 +43,16 @@
           </p>
         </div>
 
-        <Button type="submit" class="w-full h-10">Entrar</Button>
+        <p
+          v-if="authError || loginError"
+          class="text-sm font-medium text-destructive">
+          {{ loginError || authError }}
+        </p>
+
+        <Button type="submit" class="w-full h-10" :disabled="authStore.loading">
+          <template v-if="authStore.loading"> Carregando... </template>
+          <template v-else> Entrar </template>
+        </Button>
       </form>
     </div>
 
@@ -66,15 +75,26 @@ import AppImages from '../../../../public/images';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useAuthStore } from '~/stores/auth';
 
 definePageMeta({
   layout: 'auth-layout',
 });
 
+const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
 const errors = ref({});
+const loginError = ref('');
+
+const authError = computed(() => authStore.error);
+
+// Limpar erros quando o componente é montado
+onMounted(() => {
+  authStore.error = null;
+  loginError.value = '';
+});
 
 const validateEmail = () => {
   if (!email.value) {
@@ -114,13 +134,29 @@ const validateForm = () => {
   return isValid;
 };
 
-const onSubmit = () => {
+const onSubmit = async () => {
+  loginError.value = '';
+
   if (validateForm()) {
-    console.log({
-      email: email.value,
-      password: password.value,
-    });
-    // Implementar lógica de login
+    try {
+      const success = await authStore.login(email.value, password.value);
+
+      if (success) {
+        navigateTo('/dashboard');
+      } else {
+        loginError.value = 'Falha na autenticação. Verifique suas credenciais.';
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+
+      if (error.message && error.message.includes('CORS')) {
+        loginError.value =
+          'Erro de conectividade com o servidor. Tente novamente mais tarde.';
+      } else {
+        loginError.value =
+          error.message || 'Falha na autenticação. Tente novamente.';
+      }
+    }
   }
 };
 </script>

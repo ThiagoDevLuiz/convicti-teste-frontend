@@ -85,7 +85,9 @@ import { Settings } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import AppImages from '~~/public/images';
 import { cn } from '~/lib/utils';
+import { useAuthStore } from '~/stores/auth';
 
+const authStore = useAuthStore();
 const route = useRoute();
 
 const sidebarItems = [
@@ -98,6 +100,6 @@ const sidebarItems = [
 ];
 
 function logout() {
-  // Lógica de logout aqui
+  authStore.logout();
 }
 </script>
