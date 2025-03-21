@@ -42,7 +42,7 @@
       </ul>
     </div>
 
-    <div class="w-full absolute bottom-10 space-y-4 pb-5">
+    <div class="w-full absolute left-0 bottom-10 space-y-4 px-6 pb-5">
       <NuxtLink to="/configuracoes">
         <Button
           :class="

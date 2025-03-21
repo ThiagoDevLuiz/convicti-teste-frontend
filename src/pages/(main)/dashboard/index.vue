@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <h1 class="text-[32px] font-bold mb-5">Estatísticas</h1>
+    <h1 class="text-[32px] font-bold">Estatísticas</h1>
     <div class="grid grid-cols-1 gap-3 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
       <CardCategory
         v-for="card in cardsCategory"

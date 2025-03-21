@@ -7,6 +7,7 @@ import AndroidIcon from './androidIcon.svg';
 import AppleIcon from './appleIcon.svg';
 import AvaliacoesIcon from './avaliacoesIcon.svg';
 import ErrorIcon from './errorIcon.svg';
+import EditIcon from './editIcon.svg';
 
 const AppImages = {
   Logo,
@@ -18,6 +19,7 @@ const AppImages = {
   AppleIcon,
   AvaliacoesIcon,
   ErrorIcon,
+  EditIcon,
 };
 
 export default AppImages;
