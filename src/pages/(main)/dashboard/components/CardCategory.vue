@@ -7,7 +7,13 @@
       <NuxtImg class="w-[26px]" :src="card.icon" alt="Icon" />
     </div>
     <h1 class="text-[40px] font-bold">
-      {{ card.value }}
+      {{
+        isValidNumber(card.value)
+          ? card.title === 'Avaliações'
+            ? card.value.toFixed(1)
+            : card.value
+          : 0
+      }}
       <span
         v-if="card.title === 'Avaliações'"
         class="font-normal text-base -ml-2">
@@ -22,7 +28,13 @@
             :src="AppImages.AndroidIcon"
             alt="Android Icon" />
           {{
-            card.title === 'Avaliações' ? card.android.toFixed(1) : card.android
+            card.title === 'Avaliações'
+              ? isValidNumber(card.android)
+                ? card.android.toFixed(1)
+                : '0.0'
+              : isValidNumber(card.android)
+              ? card.android
+              : 0
           }}
         </p>
         <p class="flex items-center gap-1.5">
@@ -30,13 +42,21 @@
             class="w-4 h-4 -mt-1"
             :src="AppImages.AppleIcon"
             alt="Apple Icon" />
-          {{ card.title === 'Avaliações' ? card.apple.toFixed(1) : card.apple }}
+          {{
+            card.title === 'Avaliações'
+              ? isValidNumber(card.apple)
+                ? card.apple.toFixed(1)
+                : '0.0'
+              : isValidNumber(card.apple)
+              ? card.apple
+              : 0
+          }}
         </p>
       </div>
       <span
-        v-if="card.title === 'Erros'"
+        v-if="card.variation"
         class="text-accent font-semibold flex items-center gap-0.5">
-        -5%
+        {{ isValidNumber(card.variation) ? card.variation : 0 }}%
         <MoveDown class="w-4 h-4" />
       </span>
     </div>
@@ -53,9 +73,16 @@ export type Card = {
   value: number;
   android: number;
   apple: number;
+  variation?: number;
 };
 
 defineProps<{
   card: Card;
 }>();
+
+const isValidNumber = (value: number | undefined): boolean => {
+  return (
+    value !== undefined && value !== null && !isNaN(value) && isFinite(value)
+  );
+};
 </script>

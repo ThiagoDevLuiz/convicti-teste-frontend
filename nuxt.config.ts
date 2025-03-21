@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   srcDir: 'src/',
+
   app: {
     head: {
       title: 'CONVICTI Tecnologia e Desenvolvimento de Sistemas',
@@ -13,6 +14,7 @@ export default defineNuxtConfig({
       ],
     },
   },
+
   modules: [
     '@nuxt/fonts',
     '@nuxt/image',
@@ -20,6 +22,7 @@ export default defineNuxtConfig({
     'shadcn-nuxt',
     '@pinia/nuxt',
   ],
+
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.API_BASE_URL,
@@ -28,10 +31,13 @@ export default defineNuxtConfig({
       clientSecret: process.env.CLIENT_SECRET,
     },
   },
+
   ssr: false,
+
   build: {
     transpile: ['@pinia/nuxt'],
   },
+
   fonts: {
     families: [
       {
@@ -46,6 +52,7 @@ export default defineNuxtConfig({
       },
     ],
   },
+
   shadcn: {
     /**
      * Prefix for all the imported components
@@ -54,4 +61,6 @@ export default defineNuxtConfig({
 
     componentDir: 'src/components/ui',
   },
+
+  compatibilityDate: '2025-03-21',
 });
