@@ -22,12 +22,10 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8080/api/v1',
-      apiAuthUrl:
-        process.env.API_AUTH_URL || 'http://localhost:8080/oauth/token',
-      clientId: process.env.CLIENT_ID || '9e78719e-598a-417a-9ca0-2902c29b0e43',
-      clientSecret:
-        process.env.CLIENT_SECRET || 'FHu2Csyy7Wb2VdKDGKPOh8RkUOiugg1xIBBTvWSj',
+      apiBaseUrl: process.env.API_BASE_URL,
+      apiAuthUrl: process.env.API_AUTH_URL,
+      clientId: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
     },
   },
   ssr: false,
@@ -56,6 +54,4 @@ export default defineNuxtConfig({
 
     componentDir: 'src/components/ui',
   },
-
-  compatibilityDate: '2025-03-18',
 });

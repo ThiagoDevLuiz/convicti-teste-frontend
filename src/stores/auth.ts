@@ -4,8 +4,8 @@ import type {
   AuthResponse,
   AuthState,
   User,
-} from '~/lib/types/auth';
-import { authService } from '~/lib/services/auth-service';
+} from '~/services/types/auth';
+import { authService } from '~/services/auth-service';
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
@@ -34,8 +34,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
 
       try {
-        console.log('Iniciando processo de autenticação');
-
         const payload: AuthRequestPayload = {
           grant_type: 'password',
           client_id: useRuntimeConfig().public.clientId,
@@ -44,22 +42,19 @@ export const useAuthStore = defineStore('auth', {
           password,
         };
 
-        console.log('Enviando requisição com:', {
-          grant_type: payload.grant_type,
-          client_id: payload.client_id,
-          username: payload.username,
-        });
-
         const response = await authService.login(payload);
-        console.log('Autenticação bem-sucedida');
-
         this.setAuthData(response);
-        await this.fetchUserProfile();
+
+        // Definir informações básicas do usuário sem fazer chamada à API
+        this.user = {
+          id: 1,
+          name: username.split('@')[0], // Usar o nome do email como nome básico
+          email: username,
+          role: 'user',
+        };
 
         return true;
       } catch (error: any) {
-        console.error('Erro completo de autenticação:', error);
-
         if (error.response?.status === 401) {
           this.error = 'Credenciais inválidas. Verifique seu e-mail e senha.';
         } else if (error.message && error.message.includes('Network Error')) {
@@ -105,30 +100,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async fetchUserProfile() {
-      if (!this.token) return;
-
-      try {
-        // Aqui você deve implementar a chamada para obter os dados do usuário
-        // usando o composable global de $fetch
-        const { $fetchWithAuth } = useNuxtApp();
-
-        // Ajuste esta URL para o endpoint correto do perfil do usuário
-        const userData = (await $fetchWithAuth('/user/profile')) as User;
-
-        this.user = userData;
-      } catch (error: any) {
-        console.error('Erro ao obter perfil do usuário:', error);
-        // Se houver erro 401, tentar atualizar o token e tentar novamente
-        if (error.response?.status === 401) {
-          const success = await this.updateToken();
-          if (success) {
-            this.fetchUserProfile();
-          }
-        }
-      }
-    },
-
     logout() {
       if (process.server) return;
 
@@ -142,7 +113,6 @@ export const useAuthStore = defineStore('auth', {
 
         authService.clearAuthData();
 
-        // Redirecionar para a página de login após logout
         navigateTo('/login');
       } catch (error) {
         console.error('Erro ao fazer logout:', error);
@@ -169,8 +139,14 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = refreshToken;
         this.isAuthenticated = true;
 
+        // Se não tiver informações do usuário, cria um objeto básico
         if (!this.user) {
-          this.fetchUserProfile();
+          this.user = {
+            id: 1,
+            name: 'Usuário',
+            email: 'usuario@exemplo.com',
+            role: 'user',
+          };
         }
 
         return true;

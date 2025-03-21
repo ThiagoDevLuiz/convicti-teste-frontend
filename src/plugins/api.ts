@@ -14,7 +14,6 @@ export default defineNuxtPlugin(() => {
           }
         }
       } catch (error) {
-        console.error('Erro no middleware de API:', error);
         return navigateTo('/login');
       }
     });
@@ -27,7 +26,6 @@ export default defineNuxtPlugin(() => {
               ? { Authorization: `Bearer ${authStore.token}` }
               : {};
           } catch (error) {
-            console.error('Erro ao obter cabeçalhos de autenticação:', error);
             return {};
           }
         },
@@ -36,7 +34,6 @@ export default defineNuxtPlugin(() => {
           try {
             const config = useRuntimeConfig();
             const baseUrl = config.public.apiBaseUrl;
-            // Verificamos se a URL já é completa ou precisamos concatenar com o baseUrl
             const fullUrl = url.startsWith('http')
               ? url
               : `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
@@ -77,7 +74,6 @@ export default defineNuxtPlugin(() => {
               throw error;
             }
           } catch (error) {
-            console.error('Erro no fetchWithAuth:', error);
             throw error;
           }
         },
@@ -90,7 +86,6 @@ export default defineNuxtPlugin(() => {
     provide: {
       getAuthHeaders: () => ({}),
       fetchWithAuth: async (url: string, options: any = {}) => {
-        // No servidor, apenas passa a requisição sem autenticação
         const config = useRuntimeConfig();
         const baseUrl = config.public.apiBaseUrl;
         const fullUrl = url.startsWith('http')

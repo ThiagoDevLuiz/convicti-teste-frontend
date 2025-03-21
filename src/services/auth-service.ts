@@ -1,14 +1,11 @@
-import type { AuthRequestPayload, AuthResponse } from '../types/auth';
+import type { AuthRequestPayload, AuthResponse } from './types/auth';
 
 export const authService = {
   async login(payload: AuthRequestPayload): Promise<AuthResponse> {
     try {
-      console.log('Iniciando processo de autenticação');
-
       const config = useRuntimeConfig();
       const authUrl = config.public.apiAuthUrl;
 
-      // Usar o $fetch do Nuxt em vez do fetch nativo
       const response = await $fetch<AuthResponse>(authUrl, {
         method: 'POST',
         body: payload,
@@ -17,14 +14,10 @@ export const authService = {
         },
       });
 
-      console.log('Resposta da autenticação recebida');
-
-      // Salvar dados de autenticação
       this.saveAuthData(response);
 
       return response;
     } catch (error: any) {
-      console.error('Erro de autenticação:', error);
       throw new Error(error.data?.message || 'Falha na autenticação');
     }
   },
@@ -34,7 +27,6 @@ export const authService = {
       const config = useRuntimeConfig();
       const authUrl = config.public.apiAuthUrl;
 
-      // Usar o $fetch do Nuxt para atualizar o token
       const response = await $fetch<AuthResponse>(authUrl, {
         method: 'POST',
         body: {
@@ -48,12 +40,10 @@ export const authService = {
         },
       });
 
-      // Salvar os novos dados de autenticação
       this.saveAuthData(response);
 
       return response;
     } catch (error: any) {
-      console.error('Erro ao atualizar token:', error);
       throw new Error(error.data?.message || 'Falha ao atualizar token');
     }
   },
@@ -89,7 +79,6 @@ export const authService = {
       try {
         return localStorage.getItem('access_token');
       } catch (error) {
-        console.error('Erro ao obter token:', error);
         return null;
       }
     }
@@ -101,7 +90,6 @@ export const authService = {
       try {
         return localStorage.getItem('refresh_token');
       } catch (error) {
-        console.error('Erro ao obter refresh token:', error);
         return null;
       }
     }
@@ -114,7 +102,6 @@ export const authService = {
         const expiration = localStorage.getItem('token_expiration');
         return expiration ? parseInt(expiration) : null;
       } catch (error) {
-        console.error('Erro ao obter expiração do token:', error);
         return null;
       }
     }
@@ -129,7 +116,6 @@ export const authService = {
       // Adicionando uma margem de 30 segundos para evitar problemas de timing
       return Date.now() > expiration - 30000;
     } catch (error) {
-      console.error('Erro ao verificar expiração do token:', error);
       return true;
     }
   },
