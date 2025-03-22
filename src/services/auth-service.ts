@@ -115,4 +115,25 @@ export const authService = {
       return true;
     }
   },
+
+  async fetchUserData(): Promise<any> {
+    try {
+      const config = useRuntimeConfig();
+      const apiBaseUrl = config.public.apiBaseUrl;
+
+      const response = await $fetch(`${apiBaseUrl}/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.getToken()}`,
+        },
+      });
+
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.data?.message || 'Falha ao buscar dados do usuário',
+      );
+    }
+  },
 };

@@ -11,13 +11,54 @@ export interface AuthResponse {
   expires_in: number;
   access_token: string;
   refresh_token: string;
+  user?: UserData;
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  pivot: {
+    profile_id: number;
+    permission_id: number;
+  };
+}
+
+export interface Profile {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  total_users: number;
+  permissions: Permission[];
+}
+
+export interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  email_verified_at: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  profile_id: number;
+  profile: Profile;
+}
+
+export interface ApiUserResponse {
+  data: {
+    user: UserData;
+  };
 }
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  role: string;
+  profile_id: number;
+  profile_name: string;
+  permissions: string[];
 }
 
 export interface AuthState {
@@ -28,4 +69,5 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  tokenExpiration: number | null;
 }

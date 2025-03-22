@@ -3,17 +3,21 @@
     <h1 class="text-[32px] font-bold">Estatísticas</h1>
     <div class="grid grid-cols-1 gap-3 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
       <CardCategory
-        v-for="card in cardsCategory"
+        v-for="card in filteredCardsCategory"
         :key="card.title"
         :card="card" />
     </div>
 
-    <div class="w-full bg-card rounded-lg px-4 lg:px-7 pt-4 pb-6 space-y-1">
+    <div
+      v-if="hasPermission('Feedbacks')"
+      class="w-full bg-card rounded-lg px-4 lg:px-7 pt-4 pb-6 space-y-1">
       <h1 class="text-xl font-semibold">Feedbacks</h1>
       <TableFeedbacks />
     </div>
 
-    <div class="w-full bg-card rounded-lg px-4 lg:px-7 pt-4 pb-6 space-y-1">
+    <div
+      v-if="hasPermission('Novas Funcionalidades')"
+      class="w-full bg-card rounded-lg px-4 lg:px-7 pt-4 pb-6 space-y-1">
       <h1 class="text-xl font-semibold">Novas Funcionalidades</h1>
       <TableNewFeatures />
     </div>
@@ -21,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AppImages from '~~/public/images';
 import CardCategory, { type Card } from './components/CardCategory.vue';
 import TableFeedbacks from './components/TableFeedbacks.vue';
@@ -29,6 +33,12 @@ import TableNewFeatures from './components/TableNewFeatures.vue';
 import { useDownloads } from '~/composables/useDownloads';
 import { useEvaluations } from '~/composables/useEvaluations';
 import { useErrors } from '~/composables/useErrors';
+import { usePermissions } from '~/composables/usePermissions';
+import { useAuthStore } from '~/stores/auth';
+
+const { hasPermission, getUserPermissions } = usePermissions();
+const authStore = useAuthStore();
+const userPermissions = computed(() => getUserPermissions());
 
 const cardsCategory = ref<Card[]>([
   {
@@ -54,6 +64,19 @@ const cardsCategory = ref<Card[]>([
     variation: 0,
   },
 ]);
+
+const filteredCardsCategory = computed(() => {
+  return cardsCategory.value.filter(card => {
+    if (card.title === 'Downloads') {
+      return hasPermission('Downloads');
+    } else if (card.title === 'Avaliações') {
+      return hasPermission('Avaliações');
+    } else if (card.title === 'Erros') {
+      return hasPermission('Erros');
+    }
+    return true;
+  });
+});
 
 const {
   stats: downloadStats,

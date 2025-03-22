@@ -4,6 +4,7 @@ import type {
   AuthResponse,
   AuthState,
   User,
+  ApiUserResponse,
 } from '~/services/types/auth';
 import { authService } from '~/services/auth-service';
 
@@ -46,12 +47,8 @@ export const useAuthStore = defineStore('auth', {
         const response = await authService.login(payload);
         this.setAuthData(response);
 
-        this.user = {
-          id: 1,
-          name: username.split('@')[0],
-          email: username,
-          role: 'user',
-        };
+        // Buscar dados do usuário
+        await this.fetchUserData();
 
         return true;
       } catch (error: any) {
@@ -69,6 +66,32 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async fetchUserData() {
+      if (!this.token) return false;
+
+      try {
+        const userData = (await authService.fetchUserData()) as ApiUserResponse;
+        const user = userData.data.user;
+
+        // Extrair as permissões do perfil
+        const permissions = user.profile.permissions.map(p => p.name);
+
+        // Atualizar os dados do usuário
+        this.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profile_id: user.profile_id,
+          profile_name: user.profile.name,
+          permissions: permissions,
+        };
+
+        return true;
+      } catch (error) {
+        return false;
+      }
+    },
+
     async updateToken() {
       if (process.server) return false;
       if (!this.refreshToken) return false;
@@ -78,6 +101,10 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await authService.refreshToken(this.refreshToken);
         this.setAuthData(response);
+
+        // Atualizar dados do usuário após refresh do token
+        await this.fetchUserData();
+
         return true;
       } catch (error) {
         this.logout();
@@ -89,7 +116,6 @@ export const useAuthStore = defineStore('auth', {
 
     setAuthData(data: AuthResponse): void {
       try {
-        this.user = data.user;
         this.token = data.access_token;
         this.refreshToken = data.refresh_token;
         this.isAuthenticated = true;
@@ -121,6 +147,16 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    clearAuthData() {
+      this.user = null;
+      this.token = null;
+      this.refreshToken = null;
+      this.expiresIn = null;
+      this.isAuthenticated = false;
+      this.error = null;
+      this.tokenExpiration = null;
+    },
+
     async checkAuth() {
       if (process.server) return false;
 
@@ -142,12 +178,8 @@ export const useAuthStore = defineStore('auth', {
         this.isAuthenticated = true;
 
         if (!this.user) {
-          this.user = {
-            id: 1,
-            name: 'Usuário',
-            email: 'usuario@exemplo.com',
-            role: 'user',
-          };
+          // Buscar dados do usuário se não existirem
+          await this.fetchUserData();
         }
 
         return true;

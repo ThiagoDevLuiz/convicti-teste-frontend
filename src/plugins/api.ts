@@ -43,6 +43,8 @@ export default defineNuxtPlugin(() => {
               options.headers = {
                 ...options.headers,
                 Authorization: `Bearer ${authStore.token}`,
+                'Content-Type':
+                  options.headers?.['Content-Type'] || 'application/json',
               };
             }
 
