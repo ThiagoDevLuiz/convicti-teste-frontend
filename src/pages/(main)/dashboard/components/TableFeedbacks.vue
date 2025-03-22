@@ -22,7 +22,7 @@
               v-for="col in 5"
               :key="`skeleton-cell-${col}`"
               class="py-4">
-              <div class="h-4 bg-muted/40 rounded-md"></div>
+              <Skeleton class="h-4 w-full" />
             </TableCell>
           </TableRow>
         </template>

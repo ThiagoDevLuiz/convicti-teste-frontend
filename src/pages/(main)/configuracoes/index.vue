@@ -21,6 +21,7 @@
 
       <TableProfiles
         :profiles-data="profilesData"
+        :loading="loading"
         @refresh-data="fetchProfilesData" />
     </div>
 
@@ -44,6 +45,7 @@
 
       <TableUsers
         :users-data="usersData"
+        :loading="loading"
         @refresh-data="fetchUsersData"
         @refresh-profiles="fetchProfilesData" />
     </div>
@@ -87,29 +89,44 @@ onMounted(async () => {
 
 async function fetchData() {
   try {
+    loading.value = true;
     await Promise.all([fetchProfilesData(), fetchUsersData()]);
-  } catch (error) {}
+  } catch (error) {
+    // Tratar erro
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function fetchProfilesData() {
   try {
+    loading.value = true;
     const { $fetchWithAuth } = useNuxtApp();
     const profilesResponse = await $fetchWithAuth('/profiles', {
       method: 'GET',
     });
     profilesData.value = profilesResponse as ProfilesResponse;
     return profilesResponse;
-  } catch (error) {}
+  } catch (error) {
+    // Tratar erro
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function fetchUsersData() {
   try {
+    loading.value = true;
     const { $fetchWithAuth } = useNuxtApp();
     const usersResponse = await $fetchWithAuth('/users', {
       method: 'GET',
     });
     usersData.value = usersResponse as UsersResponse;
-  } catch (error) {}
+  } catch (error) {
+    // Tratar erro
+  } finally {
+    loading.value = false;
+  }
 }
 
 function handleUserAdded() {

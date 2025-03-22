@@ -2,10 +2,15 @@
   <div class="space-y-4">
     <h1 class="text-[32px] font-bold">Estatísticas</h1>
     <div class="grid grid-cols-1 gap-3 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <CardCategory
-        v-for="card in filteredCardsCategory"
-        :key="card.title"
-        :card="card" />
+      <template v-if="isLoading">
+        <CardSkeleton v-for="index in 3" :key="`skeleton-${index}`" />
+      </template>
+      <template v-else>
+        <CardCategory
+          v-for="card in filteredCardsCategory"
+          :key="card.title"
+          :card="card" />
+      </template>
     </div>
 
     <div
@@ -28,6 +33,7 @@
 import { ref, onMounted, computed } from 'vue';
 import AppImages from '~~/public/images';
 import CardCategory, { type Card } from './components/CardCategory.vue';
+import CardSkeleton from './components/CardSkeleton.vue';
 import TableFeedbacks from './components/TableFeedbacks.vue';
 import TableNewFeatures from './components/TableNewFeatures.vue';
 import { useDownloads } from '~/composables/useDownloads';
@@ -98,6 +104,12 @@ const {
   error: errorsError,
   fetchErrorsStats,
 } = useErrors();
+
+const isLoading = computed(() => {
+  return (
+    downloadsLoading.value || evaluationsLoading.value || errorsLoading.value
+  );
+});
 
 const loadDownloadsData = async () => {
   try {
