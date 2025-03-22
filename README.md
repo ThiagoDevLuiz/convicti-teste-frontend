@@ -1,10 +1,75 @@
-# Nuxt Minimal Starter
+# CONVICTI - Sistema de Gestão e Monitoramento de Apps
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Um painel administrativo para monitoramento de aplicativos móveis, desenvolvido com Nuxt 3, Vue 3, TypeScript, Tailwind CSS e Shadcn UI.
+
+## Visão Geral
+
+Este sistema permite o gerenciamento e monitoramento de aplicativos móveis, oferecendo:
+
+- **Dashboard de Estatísticas**: Visualização de downloads, avaliações e erros
+- **Gerenciamento de Feedbacks**: Listagem e gerenciamento de feedbacks dos usuários
+- **Novas Funcionalidades**: Acompanhamento de novas funcionalidades do sistema
+- **Sistema de Autenticação**: Login seguro com OAuth 2.0
+- **Controle de Acesso**: Sistema de permissões para diferentes níveis de usuários
+
+## Tecnologias Utilizadas
+
+- **Frontend**: Nuxt 3, Vue 3, TypeScript
+- **Estilização**: Tailwind CSS, Shadcn UI
+- **Gerenciamento de Estado**: Pinia
+- **Autenticação**: OAuth 2.0
+
+## Estrutura do Projeto
+
+- **/src/pages**: Rotas da aplicação (login, dashboard)
+- **/src/components**: Componentes reutilizáveis
+- **/src/layouts**: Layouts para diferentes seções (autenticação, principal)
+- **/src/stores**: Gerenciamento de estado com Pinia
+- **/src/composables**: Composables Vue para lógica reutilizável
+- **/src/services**: Serviços de comunicação com API
+- **/src/middleware**: Middlewares para controle de navegação
+
+## Funcionalidades Principais
+
+### Autenticação
+
+- Login seguro com credenciais
+- Renovação automática de tokens
+- Controle de sessão
+
+### Dashboard
+
+- Visualização de estatísticas de downloads (Android e iOS)
+- Monitoramento de avaliações de usuários
+- Acompanhamento de erros do aplicativo
+
+### Gerenciamento de Feedbacks
+
+- Listagem de feedbacks de usuários
+- Filtragem e ordenação de dados
+
+### Novas Funcionalidades
+
+- Acompanhamento de recursos em desenvolvimento
+- Status de implementação
+
+### Sistema de Permissões
+
+- Controle granular de acesso baseado em permissões
+- Visualização condicional de componentes e recursos
 
 ## Setup
 
-Make sure to install dependencies:
+Renomeie o arquivo `.env.example` para `.env` e configure as variáveis de ambiente:
+
+```
+API_AUTH_URL=http://localhost:8080/oauth/token
+API_BASE_URL=http://localhost:8080/api/v1
+CLIENT_ID=seu_client_id
+CLIENT_SECRET=seu_client_secret
+```
+
+Instale as dependências:
 
 ```bash
 # npm
@@ -20,9 +85,9 @@ yarn install
 bun install
 ```
 
-## Development Server
+## Servidor de Desenvolvimento
 
-Start the development server on `http://localhost:3000`:
+Inicie o servidor de desenvolvimento em `http://localhost:3000`:
 
 ```bash
 # npm
@@ -38,9 +103,9 @@ yarn dev
 bun run dev
 ```
 
-## Production
+## Produção
 
-Build the application for production:
+Compile a aplicação para produção:
 
 ```bash
 # npm
@@ -56,7 +121,7 @@ yarn build
 bun run build
 ```
 
-Locally preview production build:
+Visualize localmente a versão de produção:
 
 ```bash
 # npm
@@ -71,5 +136,3 @@ yarn preview
 # bun
 bun run preview
 ```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
