@@ -11,6 +11,9 @@ Este sistema permite o gerenciamento e monitoramento de aplicativos móveis, ofe
 - **Novas Funcionalidades**: Acompanhamento de novas funcionalidades do sistema
 - **Sistema de Autenticação**: Login seguro com OAuth 2.0
 - **Controle de Acesso**: Sistema de permissões para diferentes níveis de usuários
+- **Versionamento Estruturado**: Adoção de commits convencionais para histórico claro, facilitando o controle de versões e colaboração em equipe caso tenha.
+
+O projeto foi projetado pensando na melhor estrutura de organização possível, seguindo os princípios de arquitetura modular e componentização. Foram implementadas diversas otimizações de desempenho, como lazy loading de componentes, gerenciamento eficiente de estado e cache de requisições, garantindo uma experiência fluida mesmo com grande volume de dados.
 
 ## Tecnologias Utilizadas
 
