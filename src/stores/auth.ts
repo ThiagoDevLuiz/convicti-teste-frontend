@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: false,
     loading: false,
     error: null,
+    tokenExpiration: null,
   }),
 
   getters: {
@@ -45,10 +46,9 @@ export const useAuthStore = defineStore('auth', {
         const response = await authService.login(payload);
         this.setAuthData(response);
 
-        // Definir informações básicas do usuário sem fazer chamada à API
         this.user = {
           id: 1,
-          name: username.split('@')[0], // Usar o nome do email como nome básico
+          name: username.split('@')[0],
           email: username,
           role: 'user',
         };
@@ -87,20 +87,21 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    setAuthData(authData: AuthResponse) {
+    setAuthData(data: AuthResponse): void {
       try {
-        this.token = authData.access_token;
-        this.refreshToken = authData.refresh_token;
-        this.expiresIn = authData.expires_in;
+        this.user = data.user;
+        this.token = data.access_token;
+        this.refreshToken = data.refresh_token;
         this.isAuthenticated = true;
 
-        authService.saveAuthData(authData);
-      } catch (error) {
-        console.error('Erro ao definir dados de autenticação:', error);
-      }
+        const expiresInMs = data.expires_in * 1000;
+        this.tokenExpiration = Date.now() + expiresInMs;
+
+        authService.saveAuthData(data);
+      } catch (error) {}
     },
 
-    logout() {
+    async logout() {
       if (process.server) return;
 
       try {
@@ -115,11 +116,12 @@ export const useAuthStore = defineStore('auth', {
 
         navigateTo('/login');
       } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+      } finally {
+        this.clearAuthData();
       }
     },
 
-    checkAuth() {
+    async checkAuth() {
       if (process.server) return false;
 
       try {
@@ -139,7 +141,6 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = refreshToken;
         this.isAuthenticated = true;
 
-        // Se não tiver informações do usuário, cria um objeto básico
         if (!this.user) {
           this.user = {
             id: 1,
@@ -151,7 +152,6 @@ export const useAuthStore = defineStore('auth', {
 
         return true;
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
         return false;
       }
     },

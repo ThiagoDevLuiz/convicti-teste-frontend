@@ -90,7 +90,6 @@ const loginError = ref('');
 
 const authError = computed(() => authStore.error);
 
-// Limpar erros quando o componente é montado
 onMounted(() => {
   authStore.error = null;
   loginError.value = '';
@@ -147,8 +146,6 @@ const onSubmit = async () => {
         loginError.value = 'Falha na autenticação. Verifique suas credenciais.';
       }
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
-
       if (error.message && error.message.includes('CORS')) {
         loginError.value =
           'Erro de conectividade com o servidor. Tente novamente mais tarde.';

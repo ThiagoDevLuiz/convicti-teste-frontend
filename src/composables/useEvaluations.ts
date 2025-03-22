@@ -108,23 +108,15 @@ export function useEvaluations() {
       const { $fetchWithAuth } = useNuxtApp();
 
       // Busca apenas a primeira página para obter informações de paginação
-      console.log('Buscando dados de avaliações...');
       const firstPageResponse = (await $fetchWithAuth('/evaluations', {
         method: 'GET',
       })) as EvaluationResponse;
 
-      console.log(
-        'Resposta recebida:',
-        JSON.stringify(firstPageResponse, null, 2),
-      );
-
       // Obter total de avaliações do sistema
       const total = firstPageResponse.data.total;
-      console.log('Total de avaliações:', total);
 
       // Se não tiver dados, retorna zeros
       if (total === 0) {
-        console.log('Sem dados de avaliações, retornando zeros');
         stats.value = {
           average: 0,
           android: 0,
@@ -141,16 +133,8 @@ export function useEvaluations() {
       let itemsProcessed = 0;
 
       // Processa primeira página
-      console.log(
-        'Processando itens da primeira página:',
-        firstPageResponse.data.data.length,
-      );
       for (const item of firstPageResponse.data.data) {
-        // Loga o item completo para debug
-        console.log('Item completo:', JSON.stringify(item));
-
         const validScore = getScore(item);
-        console.log('Score calculado:', validScore);
 
         if (item.platform === 'ANDROID') {
           androidCount++;
@@ -161,11 +145,6 @@ export function useEvaluations() {
         }
         itemsProcessed++;
       }
-
-      console.log('Após processar primeira página:');
-      console.log('Android count:', androidCount, 'Android sum:', androidSum);
-      console.log('iOS count:', iosCount, 'iOS sum:', iosSum);
-      console.log('Items processados:', itemsProcessed);
 
       // Informações sobre a paginação
       const lastPage = firstPageResponse.data.last_page;
@@ -302,11 +281,8 @@ export function useEvaluations() {
       if (isNaN(stats.value.android)) stats.value.android = 0;
       if (isNaN(stats.value.ios)) stats.value.ios = 0;
 
-      // Antes de retornar, loga os valores finais
-      console.log('Valores finais:', stats.value);
       return stats.value;
     } catch (err: any) {
-      console.error('Erro ao buscar estatísticas de avaliações:', err);
       error.value =
         err.data?.message || 'Falha ao buscar estatísticas de avaliações';
       throw err;

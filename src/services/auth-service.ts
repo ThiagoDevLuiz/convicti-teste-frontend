@@ -49,29 +49,25 @@ export const authService = {
   },
 
   saveAuthData(authData: AuthResponse): void {
-    if (process.client) {
-      try {
+    try {
+      if (process.client) {
         const tokenExpiration = Date.now() + authData.expires_in * 1000;
 
         localStorage.setItem('access_token', authData.access_token);
         localStorage.setItem('refresh_token', authData.refresh_token);
         localStorage.setItem('token_expiration', tokenExpiration.toString());
-      } catch (error) {
-        console.error('Erro ao salvar dados de autenticação:', error);
       }
-    }
+    } catch (error) {}
   },
 
   clearAuthData(): void {
-    if (process.client) {
-      try {
+    try {
+      if (process.client) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('token_expiration');
-      } catch (error) {
-        console.error('Erro ao limpar dados de autenticação:', error);
       }
-    }
+    } catch (error) {}
   },
 
   getToken(): string | null {

@@ -60,7 +60,6 @@
             <PaginationPrev class="hover:bg-primary hover:text-card" />
           </PaginationListItem>
 
-          <!-- Páginas -->
           <template v-for="page in displayedPages" :key="page">
             <PaginationListItem v-if="page > 0" :value="page" as-child>
               <Button
@@ -190,10 +189,6 @@ const loadFeaturesData = async () => {
   try {
     const { $fetchWithAuth } = useNuxtApp();
 
-    console.log(
-      `Buscando página ${pagination.value.currentPage} de funcionalidades novas...`,
-    );
-
     // Buscar dados com paginação
     const response = (await $fetchWithAuth(
       `/features?is_new=1&page=${pagination.value.currentPage}`,
@@ -201,8 +196,6 @@ const loadFeaturesData = async () => {
         method: 'GET',
       },
     )) as any;
-
-    console.log('Resposta recebida:', response);
 
     // Atualiza informações de paginação
     if (response && response.data) {
@@ -213,22 +206,16 @@ const loadFeaturesData = async () => {
         total: response.data.total || 0,
       };
 
-      console.log('Informações de paginação:', pagination.value);
-
       // Se a resposta tiver os dados no formato esperado
       if (Array.isArray(response.data.data)) {
         newFeatures.value = mapApiToFeatures(response.data.data);
-        console.log(`Mapeadas ${newFeatures.value.length} funcionalidades.`);
       } else {
-        console.error('Formato de dados inesperado:', response.data);
         error.value = 'Formato de dados inesperado';
       }
     } else {
-      console.error('Estrutura de resposta inválida:', response);
       error.value = 'Estrutura de resposta inválida';
     }
   } catch (err: any) {
-    console.error('Erro ao carregar dados de funcionalidades:', err);
     // Mostrar mensagem detalhada do erro
     if (err.data && err.data.message) {
       error.value = `Erro: ${err.data.message}`;
@@ -242,7 +229,6 @@ const loadFeaturesData = async () => {
   }
 };
 
-// Carrega os dados quando o componente for montado
 onMounted(() => {
   loadFeaturesData();
 });

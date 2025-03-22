@@ -30,7 +30,6 @@ import { useDownloads } from '~/composables/useDownloads';
 import { useEvaluations } from '~/composables/useEvaluations';
 import { useErrors } from '~/composables/useErrors';
 
-// Estado reativo para os cards
 const cardsCategory = ref<Card[]>([
   {
     title: 'Downloads',
@@ -56,7 +55,6 @@ const cardsCategory = ref<Card[]>([
   },
 ]);
 
-// Usar o composable de downloads
 const {
   stats: downloadStats,
   loading: downloadsLoading,
@@ -64,7 +62,6 @@ const {
   fetchDownloadsStats,
 } = useDownloads();
 
-// Usar o composable de avaliações
 const {
   stats: evaluationStats,
   loading: evaluationsLoading,
@@ -72,7 +69,6 @@ const {
   fetchEvaluationsStats,
 } = useEvaluations();
 
-// Usar o composable de erros
 const {
   stats: errorStats,
   loading: errorsLoading,
@@ -80,13 +76,10 @@ const {
   fetchErrorsStats,
 } = useErrors();
 
-// Carrega os dados de downloads
 const loadDownloadsData = async () => {
   try {
-    // Busca estatísticas de downloads
     await fetchDownloadsStats();
 
-    // Encontra o card de Downloads e atualiza seus valores
     const downloadsCard = cardsCategory.value.find(
       card => card.title === 'Downloads',
     );
@@ -95,23 +88,19 @@ const loadDownloadsData = async () => {
       const android = downloadStats.value.android;
       const ios = downloadStats.value.ios;
 
-      // Verifica se os valores são válidos antes de atribuí-los
       downloadsCard.value = isValidNumber(total) ? total : 0;
       downloadsCard.android = isValidNumber(android) ? android : 0;
       downloadsCard.apple = isValidNumber(ios) ? ios : 0;
     }
   } catch (error) {
-    console.error('Erro ao carregar dados de downloads:', error);
+    // Erro ao carregar dados de downloads
   }
 };
 
-// Carrega os dados de avaliações
 const loadEvaluationsData = async () => {
   try {
-    // Busca estatísticas de avaliações
     await fetchEvaluationsStats();
 
-    // Encontra o card de Avaliações e atualiza seus valores
     const evaluationsCard = cardsCategory.value.find(
       card => card.title === 'Avaliações',
     );
@@ -120,30 +109,25 @@ const loadEvaluationsData = async () => {
       const android = evaluationStats.value.android;
       const ios = evaluationStats.value.ios;
 
-      // Verifica se os valores são válidos antes de atribuí-los
       evaluationsCard.value = isValidNumber(average) ? average : 0;
       evaluationsCard.android = isValidNumber(android) ? android : 0;
       evaluationsCard.apple = isValidNumber(ios) ? ios : 0;
     }
   } catch (error) {
-    console.error('Erro ao carregar dados de avaliações:', error);
+    // Erro ao carregar dados de avaliações
   }
 };
 
-// Função para verificar se um número é válido
 const isValidNumber = (value: number | undefined): boolean => {
   return (
     value !== undefined && value !== null && !isNaN(value) && isFinite(value)
   );
 };
 
-// Carrega os dados de erros
 const loadErrorsData = async () => {
   try {
-    // Busca estatísticas de erros
     await fetchErrorsStats();
 
-    // Encontra o card de Erros e atualiza seus valores
     const errorsCard = cardsCategory.value.find(card => card.title === 'Erros');
     if (errorsCard) {
       const total = errorStats.value.total;
@@ -151,18 +135,16 @@ const loadErrorsData = async () => {
       const ios = errorStats.value.ios;
       const variation = errorStats.value.variation;
 
-      // Verifica se os valores são válidos antes de atribuí-los
       errorsCard.value = isValidNumber(total) ? total : 0;
       errorsCard.android = isValidNumber(android) ? android : 0;
       errorsCard.apple = isValidNumber(ios) ? ios : 0;
       errorsCard.variation = isValidNumber(variation) ? variation : 0;
     }
   } catch (error) {
-    console.error('Erro ao carregar dados de erros:', error);
+    // Erro ao carregar dados de erros
   }
 };
 
-// Carrega os dados quando o componente for montado
 onMounted(() => {
   loadDownloadsData();
   loadEvaluationsData();

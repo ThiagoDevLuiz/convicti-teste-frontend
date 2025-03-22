@@ -2,7 +2,7 @@
   <DialogContent class="sm:max-w-[506px] px-4 md:px-8 pt-8">
     <DialogHeader>
       <DialogTitle class="text-start text-xl font-semibold"
-        >Novo Usuário</DialogTitle
+        >Editar Usuário</DialogTitle
       >
     </DialogHeader>
 
@@ -44,8 +44,8 @@
       <Button
         class="flex-1 bg-[#1400FF]/20 text-[#7F43FF] hover:text-white"
         :disabled="isLoading"
-        @click="adicionarUsuario">
-        {{ isLoading ? 'Adicionando...' : 'Adicionar' }}
+        @click="salvarUsuario">
+        {{ isLoading ? 'Salvando...' : 'Salvar' }}
       </Button>
     </DialogFooter>
   </DialogContent>
@@ -62,15 +62,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ref, onMounted, watch } from 'vue';
-import { useToast } from '@/components/ui/toast';
+import type { ApiUser } from './TableUsers.vue';
 import type { ApiProfile } from './TableProfiles.vue';
+import { ref, nextTick, onMounted, watch } from 'vue';
+import { useToast } from '@/components/ui/toast';
 
 const props = defineProps<{
+  user: ApiUser;
   open?: boolean;
 }>();
 
-const emit = defineEmits(['userAdded', 'update:open', 'refreshProfiles']);
+const emit = defineEmits(['userUpdated', 'update:open', 'refreshProfiles']);
 const isLoading = ref(false);
 const isLoadingProfiles = ref(false);
 const { toast } = useToast();
@@ -78,9 +80,10 @@ const { toast } = useToast();
 const profiles = ref<ApiProfile[]>([]);
 
 const userData = ref({
-  name: '',
-  email: '',
-  profile_id: 0,
+  id: props.user.id,
+  name: props.user.name,
+  email: props.user.email,
+  profile_id: props.user.profile_id,
 });
 
 async function carregarPerfis() {
@@ -98,10 +101,6 @@ async function carregarPerfis() {
 
     if (response && response.data) {
       profiles.value = response.data;
-
-      if (profiles.value.length > 0) {
-        userData.value.profile_id = profiles.value[0].id;
-      }
     }
   } catch (error) {
     toast({
@@ -131,7 +130,7 @@ const closeDialog = () => {
   emit('update:open', false);
 };
 
-const adicionarUsuario = async () => {
+const salvarUsuario = async () => {
   try {
     if (!userData.value.name || userData.value.name.trim() === '') {
       toast({
@@ -176,34 +175,30 @@ const adicionarUsuario = async () => {
 
     const dadosParaEnviar = {
       name: userData.value.name.trim(),
-      email: userData.value.email.trim(),
       profile_id: Number(userData.value.profile_id),
+      email: userData.value.email.trim(),
     };
 
     try {
-      const response = await $fetchWithAuth('/users', {
-        method: 'POST',
+      const response = await $fetchWithAuth(`/users/${userData.value.id}`, {
+        method: 'PUT',
         body: dadosParaEnviar,
       });
 
       toast({
         title: 'Sucesso',
-        description: 'Usuário criado com sucesso',
+        description: 'Usuário atualizado com sucesso',
         variant: 'default',
       });
 
-      emit('userAdded', true);
+      emit('userUpdated', true);
       emit('refreshProfiles', true);
 
-      userData.value = {
-        name: '',
-        email: '',
-        profile_id: profiles.value.length > 0 ? profiles.value[0].id : 0,
-      };
-
       closeDialog();
+
+      await nextTick();
     } catch (apiError: any) {
-      let errorMsg = 'Erro ao criar usuário';
+      let errorMsg = 'Erro ao atualizar usuário';
 
       if (apiError.data?.errors) {
         const errors = apiError.data.errors;
@@ -227,7 +222,7 @@ const adicionarUsuario = async () => {
       }
 
       toast({
-        title: 'Erro',
+        title: 'Erro na atualização',
         description: errorMsg,
         variant: 'destructive',
       });
@@ -235,7 +230,7 @@ const adicionarUsuario = async () => {
   } catch (error: any) {
     toast({
       title: 'Erro',
-      description: `Erro ao criar usuário: ${
+      description: `Erro ao atualizar usuário: ${
         error.message || 'Falha desconhecida'
       }`,
       variant: 'destructive',

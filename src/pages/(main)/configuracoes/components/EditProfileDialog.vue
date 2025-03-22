@@ -2,7 +2,7 @@
   <DialogContent class="sm:max-w-[506px] px-4 md:px-8 pt-8">
     <DialogHeader>
       <DialogTitle class="text-start text-xl font-semibold"
-        >Novo Perfil</DialogTitle
+        >Editar Perfil</DialogTitle
       >
     </DialogHeader>
 
@@ -36,15 +36,15 @@
     <DialogFooter class="gap-3">
       <DialogClose asChild>
         <Button
-          class="w-full md:w-44 bg-[#7C7C7C]/20 text-[#606060] hover:bg-[#7C7C7C]/30"
+          class="w-full md:w-44 bg-[#7C7C7C]/20 text-[#606060] hover:bg-[#7C7C7C]/30 dialog-close"
           >Voltar</Button
         >
       </DialogClose>
       <Button
         class="flex-1 bg-[#1400FF]/20 text-[#7F43FF] hover:text-white"
         :disabled="isLoading"
-        @click="adicionarPerfil">
-        {{ isLoading ? 'Adicionando...' : 'Adicionar' }}
+        @click="salvarPerfil">
+        {{ isLoading ? 'Salvando...' : 'Salvar' }}
       </Button>
     </DialogFooter>
   </DialogContent>
@@ -61,25 +61,38 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { ref } from 'vue';
+import type { ApiProfile } from './TableProfiles.vue';
+import { ref, onMounted } from 'vue';
 import { useToast } from '@/components/ui/toast';
 
 const props = defineProps<{
+  profile: ApiProfile;
   open?: boolean;
 }>();
 
-const emit = defineEmits(['profileAdded', 'update:open']);
-
+const emit = defineEmits(['profileUpdated', 'update:open']);
 const isLoading = ref(false);
 const { toast } = useToast();
 
-const profileName = ref('');
+const profileName = ref(props.profile.name);
 const permissions = ref({
   downloads: false,
   avaliacoes: false,
   erros: false,
   feedbacks: false,
   novasFuncionalidades: false,
+});
+
+onMounted(() => {
+  permissions.value = {
+    downloads: props.profile.permissions.some(p => p.name === 'Downloads'),
+    avaliacoes: props.profile.permissions.some(p => p.name === 'Avaliações'),
+    erros: props.profile.permissions.some(p => p.name === 'Erros'),
+    feedbacks: props.profile.permissions.some(p => p.name === 'Feedbacks'),
+    novasFuncionalidades: props.profile.permissions.some(
+      p => p.name === 'Novas Funcionalidades',
+    ),
+  };
 });
 
 function mapPermissionsToApi() {
@@ -110,9 +123,9 @@ const closeDialog = () => {
   emit('update:open', false);
 };
 
-const adicionarPerfil = async () => {
+const salvarPerfil = async () => {
   try {
-    if (!profileName.value.trim()) {
+    if (!profileName.value) {
       toast({
         title: 'Erro',
         description: 'Por favor, informe o nome do perfil',
@@ -131,31 +144,22 @@ const adicionarPerfil = async () => {
     };
 
     try {
-      const response = await $fetchWithAuth('/profiles', {
-        method: 'POST',
+      const response = await $fetchWithAuth(`/profiles/${props.profile.id}`, {
+        method: 'PUT',
         body: dadosParaEnviar,
       });
 
       toast({
         title: 'Sucesso',
-        description: 'Perfil criado com sucesso',
+        description: (response as { message: string }).message,
         variant: 'default',
       });
 
-      emit('profileAdded', true);
-
-      profileName.value = '';
-      permissions.value = {
-        downloads: false,
-        avaliacoes: false,
-        erros: false,
-        feedbacks: false,
-        novasFuncionalidades: false,
-      };
+      emit('profileUpdated', true);
 
       closeDialog();
     } catch (apiError: any) {
-      let errorMsg = 'Erro ao criar perfil';
+      let errorMsg = 'Erro ao atualizar perfil';
 
       if (apiError.data?.errors) {
         const errors = apiError.data.errors;
@@ -185,7 +189,7 @@ const adicionarPerfil = async () => {
   } catch (error: any) {
     toast({
       title: 'Erro',
-      description: `Erro ao criar perfil: ${
+      description: `Erro ao atualizar perfil: ${
         error.message || 'Falha desconhecida'
       }`,
       variant: 'destructive',

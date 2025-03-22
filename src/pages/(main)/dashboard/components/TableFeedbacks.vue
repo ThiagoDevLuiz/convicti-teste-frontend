@@ -80,7 +80,6 @@
             <PaginationPrev class="hover:bg-primary hover:text-card" />
           </PaginationListItem>
 
-          <!-- Páginas -->
           <template v-for="page in displayedPages" :key="page">
             <PaginationListItem v-if="page > 0" :value="page" as-child>
               <Button
@@ -225,10 +224,6 @@ const loadFeedbacksData = async () => {
   try {
     const { $fetchWithAuth } = useNuxtApp();
 
-    console.log(
-      `Buscando página ${pagination.value.currentPage} de feedbacks...`,
-    );
-
     // Buscar dados com paginação
     const response = (await $fetchWithAuth(
       `/evaluations?page=${pagination.value.currentPage}`,
@@ -236,8 +231,6 @@ const loadFeedbacksData = async () => {
         method: 'GET',
       },
     )) as any;
-
-    console.log('Resposta recebida:', response);
 
     // Atualiza informações de paginação
     if (response && response.data) {
@@ -248,22 +241,16 @@ const loadFeedbacksData = async () => {
         total: response.data.total || 0,
       };
 
-      console.log('Informações de paginação:', pagination.value);
-
       // Se a resposta tiver os dados no formato esperado
       if (Array.isArray(response.data.data)) {
         feedbacks.value = mapEvaluationsToFeedbacks(response.data.data);
-        console.log(`Mapeados ${feedbacks.value.length} feedbacks.`);
       } else {
-        console.error('Formato de dados inesperado:', response.data);
         error.value = 'Formato de dados inesperado';
       }
     } else {
-      console.error('Estrutura de resposta inválida:', response);
       error.value = 'Estrutura de resposta inválida';
     }
   } catch (err: any) {
-    console.error('Erro ao carregar dados de feedbacks:', err);
     // Mostrar mensagem detalhada do erro
     if (err.data && err.data.message) {
       error.value = `Erro: ${err.data.message}`;
