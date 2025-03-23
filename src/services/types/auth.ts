@@ -47,9 +47,7 @@ export interface UserData {
 }
 
 export interface ApiUserResponse {
-  data: {
-    user: UserData;
-  };
+  data: { user: UserData };
 }
 
 export interface User {

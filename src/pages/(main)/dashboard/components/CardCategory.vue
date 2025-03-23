@@ -7,13 +7,7 @@
       <NuxtImg class="w-[26px]" :src="card.icon" alt="Icon" />
     </div>
     <h1 class="text-[40px] font-bold">
-      {{
-        isValidNumber(card.value)
-          ? card.title === 'Avaliações'
-            ? card.value.toFixed(1)
-            : card.value
-          : 0
-      }}
+      {{ formatCardValue(card.value) }}
       <span
         v-if="card.title === 'Avaliações'"
         class="font-normal text-base -ml-2">
@@ -27,36 +21,20 @@
             class="w-4 h-4"
             :src="AppImages.AndroidIcon"
             alt="Android Icon" />
-          {{
-            card.title === 'Avaliações'
-              ? isValidNumber(card.android)
-                ? card.android.toFixed(1)
-                : '0.0'
-              : isValidNumber(card.android)
-              ? card.android
-              : 0
-          }}
+          {{ formatPlatformValue(card.android) }}
         </p>
         <p class="flex items-center gap-1.5">
           <NuxtImg
             class="w-4 h-4 -mt-1"
             :src="AppImages.AppleIcon"
             alt="Apple Icon" />
-          {{
-            card.title === 'Avaliações'
-              ? isValidNumber(card.apple)
-                ? card.apple.toFixed(1)
-                : '0.0'
-              : isValidNumber(card.apple)
-              ? card.apple
-              : 0
-          }}
+          {{ formatPlatformValue(card.apple) }}
         </p>
       </div>
       <span
-        v-if="card.variation"
+        v-if="card.variation !== undefined"
         class="text-accent font-semibold flex items-center gap-0.5">
-        {{ isValidNumber(card.variation) ? card.variation : 0 }}%
+        {{ formatVariation(card.variation) }}%
         <MoveDown class="w-4 h-4" />
       </span>
     </div>
@@ -76,7 +54,7 @@ export type Card = {
   variation?: number;
 };
 
-defineProps<{
+const props = defineProps<{
   card: Card;
 }>();
 
@@ -84,5 +62,20 @@ const isValidNumber = (value: number | undefined): boolean => {
   return (
     value !== undefined && value !== null && !isNaN(value) && isFinite(value)
   );
+};
+
+const formatCardValue = (value: number) => {
+  if (!isValidNumber(value)) return 0;
+  return props.card.title === 'Avaliações' ? value.toFixed(1) : value;
+};
+
+const formatPlatformValue = (value: number) => {
+  if (!isValidNumber(value))
+    return props.card.title === 'Avaliações' ? '0.0' : 0;
+  return props.card.title === 'Avaliações' ? value.toFixed(1) : value;
+};
+
+const formatVariation = (variation: number | undefined) => {
+  return isValidNumber(variation) ? variation : 0;
 };
 </script>

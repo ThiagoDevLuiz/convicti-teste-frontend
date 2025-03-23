@@ -13,10 +13,10 @@
       <form @submit.prevent="onSubmit" class="space-y-3">
         <div class="space-y-1">
           <Input
-            v-model="email"
+            v-model="form.email"
             type="email"
             placeholder="Seu e-mail"
-            @blur="validateEmail"
+            @blur="validateField('email')"
             :class="{
               'border-destructive focus-visible:ring-transparent': errors.email,
             }" />
@@ -29,9 +29,9 @@
 
         <div class="space-y-1">
           <PasswordInput
-            v-model="password"
+            v-model="form.password"
             placeholder="Sua senha"
-            @blur="validatePassword"
+            @blur="validateField('password')"
             :class="{
               'border-destructive focus-visible:ring-transparent':
                 errors.password,
@@ -43,15 +43,12 @@
           </p>
         </div>
 
-        <p
-          v-if="authError || loginError"
-          class="text-sm font-medium text-destructive">
-          {{ loginError || authError }}
+        <p v-if="errorMessage" class="text-sm font-medium text-destructive">
+          {{ errorMessage }}
         </p>
 
         <Button type="submit" class="w-full h-10" :disabled="authStore.loading">
-          <template v-if="authStore.loading"> Carregando... </template>
-          <template v-else> Entrar </template>
+          {{ authStore.loading ? 'Carregando...' : 'Entrar' }}
         </Button>
       </form>
     </div>
@@ -83,54 +80,44 @@ definePageMeta({
 });
 
 const authStore = useAuthStore();
-const email = ref('');
-const password = ref('');
+const form = ref({
+  email: '',
+  password: '',
+});
 const errors = ref({});
 const loginError = ref('');
 
-const authError = computed(() => authStore.error);
+const errorMessage = computed(() => loginError.value || authStore.error);
 
 onMounted(() => {
   authStore.error = null;
   loginError.value = '';
 });
 
-const validateEmail = () => {
-  if (!email.value) {
-    errors.value.email = 'E-mail é obrigatório';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    errors.value.email = 'E-mail inválido';
-  } else {
-    delete errors.value.email;
-  }
+const validators = {
+  email: value => {
+    if (!value) return 'E-mail é obrigatório';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'E-mail inválido';
+    return '';
+  },
+  password: value => {
+    if (!value || value.length < 6) return 'Mínimo 6 caracteres obrigatório';
+    return '';
+  },
 };
 
-const validatePassword = () => {
-  if (!password.value || password.value.length < 6) {
-    errors.value.password = 'Mínimo 6 caracteres obrigatório';
+const validateField = field => {
+  const error = validators[field](form.value[field]);
+  if (error) {
+    errors.value[field] = error;
   } else {
-    delete errors.value.password;
+    delete errors.value[field];
   }
 };
 
 const validateForm = () => {
-  errors.value = {};
-  let isValid = true;
-
-  if (!email.value) {
-    errors.value.email = 'E-mail é obrigatório';
-    isValid = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    errors.value.email = 'E-mail inválido';
-    isValid = false;
-  }
-
-  if (!password.value || password.value.length < 6) {
-    errors.value.password = 'Mínimo 6 caracteres obrigatório';
-    isValid = false;
-  }
-
-  return isValid;
+  Object.keys(validators).forEach(field => validateField(field));
+  return Object.keys(errors.value).length === 0;
 };
 
 const onSubmit = async () => {
@@ -138,7 +125,10 @@ const onSubmit = async () => {
 
   if (validateForm()) {
     try {
-      const success = await authStore.login(email.value, password.value);
+      const success = await authStore.login(
+        form.value.email,
+        form.value.password,
+      );
 
       if (success) {
         navigateTo('/dashboard');
@@ -146,13 +136,9 @@ const onSubmit = async () => {
         loginError.value = 'Falha na autenticação. Verifique suas credenciais.';
       }
     } catch (error) {
-      if (error.message && error.message.includes('CORS')) {
-        loginError.value =
-          'Erro de conectividade com o servidor. Tente novamente mais tarde.';
-      } else {
-        loginError.value =
-          error.message || 'Falha na autenticação. Tente novamente.';
-      }
+      loginError.value = error.message?.includes('CORS')
+        ? 'Erro de conectividade com o servidor. Tente novamente mais tarde.'
+        : error.message || 'Falha na autenticação. Tente novamente.';
     }
   }
 };

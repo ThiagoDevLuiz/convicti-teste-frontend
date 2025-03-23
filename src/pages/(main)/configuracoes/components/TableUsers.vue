@@ -29,15 +29,15 @@
           v-for="(user, index) in usersData.data"
           :key="user.id"
           :class="index % 2 === 0 ? 'bg-background' : 'bg-card'">
-          <TableCell class="align-middle font-medium text-nowrap py-1.5">{{
-            user.name
-          }}</TableCell>
-          <TableCell class="align-middle font-medium text-nowrap py-1.5">{{
-            user.email
-          }}</TableCell>
-          <TableCell class="align-middle font-medium py-1.5">{{
-            user.profile.name
-          }}</TableCell>
+          <TableCell class="align-middle font-medium text-nowrap py-1.5">
+            {{ user.name }}
+          </TableCell>
+          <TableCell class="align-middle font-medium text-nowrap py-1.5">
+            {{ user.email }}
+          </TableCell>
+          <TableCell class="align-middle font-medium py-1.5">
+            {{ user.profile.name }}
+          </TableCell>
           <TableCell class="w-36 align-middle font-medium py-1.5 pr-2">
             <Badge
               :variant="user.active ? 'success' : 'destructive'"
@@ -46,7 +46,9 @@
             </Badge>
           </TableCell>
           <TableCell class="w-10 bg-card text-right align-middle px-1 py-1.5">
-            <Dialog v-model:open="editDialogOpenMap[user.id]">
+            <Dialog
+              :open="openDialogId === user.id"
+              @update:open="updateDialogState($event, user.id)">
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <NuxtImg
@@ -58,7 +60,8 @@
               </DialogTrigger>
               <EditUserDialog
                 :user="user"
-                v-model:open="editDialogOpenMap[user.id]"
+                :open="openDialogId === user.id"
+                @update:open="updateDialogState($event, user.id)"
                 @user-updated="onUserUpdated" />
             </Dialog>
           </TableCell>
@@ -130,7 +133,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['refreshData', 'refreshProfiles']);
 
-const editDialogOpenMap = ref<Record<number, boolean>>({});
+const openDialogId = ref<number | null>(null);
+
+const updateDialogState = (isOpen: boolean, userId: number) => {
+  openDialogId.value = isOpen ? userId : null;
+};
 
 const onUserUpdated = () => {
   emit('refreshData');

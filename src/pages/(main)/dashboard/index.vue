@@ -43,7 +43,6 @@ import { usePermissions } from '~/composables/usePermissions';
 import { useAuthStore } from '~/stores/auth';
 
 const { hasPermission, getUserPermissions } = usePermissions();
-const authStore = useAuthStore();
 const userPermissions = computed(() => getUserPermissions());
 
 const cardsCategory = ref<Card[]>([
@@ -72,117 +71,120 @@ const cardsCategory = ref<Card[]>([
 ]);
 
 const filteredCardsCategory = computed(() => {
-  return cardsCategory.value.filter(card => {
-    if (card.title === 'Downloads') {
-      return hasPermission('Downloads');
-    } else if (card.title === 'Avaliações') {
-      return hasPermission('Avaliações');
-    } else if (card.title === 'Erros') {
-      return hasPermission('Erros');
-    }
-    return true;
-  });
+  const permissionMap = {
+    Downloads: 'Downloads',
+    Avaliações: 'Avaliações',
+    Erros: 'Erros',
+  };
+
+  return cardsCategory.value.filter(card =>
+    hasPermission(
+      permissionMap[card.title as keyof typeof permissionMap] || '',
+    ),
+  );
 });
 
 const {
   stats: downloadStats,
   loading: downloadsLoading,
-  error: downloadsError,
   fetchDownloadsStats,
 } = useDownloads();
 
 const {
   stats: evaluationStats,
   loading: evaluationsLoading,
-  error: evaluationsError,
   fetchEvaluationsStats,
 } = useEvaluations();
 
 const {
   stats: errorStats,
   loading: errorsLoading,
-  error: errorsError,
   fetchErrorsStats,
 } = useErrors();
 
-const isLoading = computed(() => {
-  return (
-    downloadsLoading.value || evaluationsLoading.value || errorsLoading.value
-  );
-});
+const isLoading = computed(
+  () =>
+    downloadsLoading.value || evaluationsLoading.value || errorsLoading.value,
+);
+
+const isValidNumber = (value: number | undefined): boolean =>
+  value !== undefined && value !== null && !isNaN(value) && isFinite(value);
+
+const updateCardData = (
+  title: string,
+  mainValue: number | undefined,
+  androidValue: number | undefined,
+  iosValue: number | undefined,
+  variationValue?: number | undefined,
+) => {
+  const card = cardsCategory.value.find(card => card.title === title);
+  if (card) {
+    card.value = isValidNumber(mainValue) ? Number(mainValue) : 0;
+    card.android = isValidNumber(androidValue) ? Number(androidValue) : 0;
+    card.apple = isValidNumber(iosValue) ? Number(iosValue) : 0;
+
+    if (variationValue !== undefined && 'variation' in card) {
+      card.variation = isValidNumber(variationValue)
+        ? Number(variationValue)
+        : 0;
+    }
+  }
+};
+
+const loadData = async () => {
+  try {
+    await Promise.all([
+      loadDownloadsData(),
+      loadEvaluationsData(),
+      loadErrorsData(),
+    ]);
+  } catch (error) {
+    console.error('Erro ao carregar dados do dashboard:', error);
+  }
+};
 
 const loadDownloadsData = async () => {
   try {
     await fetchDownloadsStats();
-
-    const downloadsCard = cardsCategory.value.find(
-      card => card.title === 'Downloads',
+    updateCardData(
+      'Downloads',
+      downloadStats.value.total,
+      downloadStats.value.android,
+      downloadStats.value.ios,
     );
-    if (downloadsCard) {
-      const total = downloadStats.value.total;
-      const android = downloadStats.value.android;
-      const ios = downloadStats.value.ios;
-
-      downloadsCard.value = isValidNumber(total) ? total : 0;
-      downloadsCard.android = isValidNumber(android) ? android : 0;
-      downloadsCard.apple = isValidNumber(ios) ? ios : 0;
-    }
   } catch (error) {
-    // Erro ao carregar dados de downloads
+    console.error('Erro ao carregar dados de downloads:', error);
   }
 };
 
 const loadEvaluationsData = async () => {
   try {
     await fetchEvaluationsStats();
-
-    const evaluationsCard = cardsCategory.value.find(
-      card => card.title === 'Avaliações',
+    updateCardData(
+      'Avaliações',
+      evaluationStats.value.average,
+      evaluationStats.value.android,
+      evaluationStats.value.ios,
     );
-    if (evaluationsCard) {
-      const average = evaluationStats.value.average;
-      const android = evaluationStats.value.android;
-      const ios = evaluationStats.value.ios;
-
-      evaluationsCard.value = isValidNumber(average) ? average : 0;
-      evaluationsCard.android = isValidNumber(android) ? android : 0;
-      evaluationsCard.apple = isValidNumber(ios) ? ios : 0;
-    }
   } catch (error) {
-    // Erro ao carregar dados de avaliações
+    console.error('Erro ao carregar dados de avaliações:', error);
   }
-};
-
-const isValidNumber = (value: number | undefined): boolean => {
-  return (
-    value !== undefined && value !== null && !isNaN(value) && isFinite(value)
-  );
 };
 
 const loadErrorsData = async () => {
   try {
     await fetchErrorsStats();
-
-    const errorsCard = cardsCategory.value.find(card => card.title === 'Erros');
-    if (errorsCard) {
-      const total = errorStats.value.total;
-      const android = errorStats.value.android;
-      const ios = errorStats.value.ios;
-      const variation = errorStats.value.variation;
-
-      errorsCard.value = isValidNumber(total) ? total : 0;
-      errorsCard.android = isValidNumber(android) ? android : 0;
-      errorsCard.apple = isValidNumber(ios) ? ios : 0;
-      errorsCard.variation = isValidNumber(variation) ? variation : 0;
-    }
+    updateCardData(
+      'Erros',
+      errorStats.value.total,
+      errorStats.value.android,
+      errorStats.value.ios,
+      errorStats.value.variation,
+    );
   } catch (error) {
-    // Erro ao carregar dados de erros
+    console.error('Erro ao carregar dados de erros:', error);
   }
 };
 
-onMounted(() => {
-  loadDownloadsData();
-  loadEvaluationsData();
-  loadErrorsData();
-});
+onMounted(loadData);
 </script>

@@ -39,7 +39,14 @@ export interface DownloadStatResponse {
   };
 }
 
-export function useDownloads() {
+interface DownloadUtils {
+  stats: Ref<DownloadStats>;
+  loading: Ref<boolean>;
+  error: Ref<string | null>;
+  fetchDownloadsStats: () => Promise<DownloadStats>;
+}
+
+export function useDownloads(): DownloadUtils {
   const stats = ref<DownloadStats>({
     total: 0,
     android: 0,
@@ -49,7 +56,39 @@ export function useDownloads() {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchDownloadsStats = async () => {
+  const countPlatformItems = (
+    items: DownloadItem[],
+  ): { android: number; ios: number } => {
+    let androidCount = 0;
+    let iosCount = 0;
+
+    for (const item of items) {
+      if (item.platform === 'ANDROID') {
+        androidCount++;
+      } else if (item.platform === 'IOS') {
+        iosCount++;
+      }
+    }
+
+    return { android: androidCount, ios: iosCount };
+  };
+
+  const fetchAdditionalPages = async (
+    pages: number[],
+    baseUrl: string,
+  ): Promise<DownloadItem[]> => {
+    const { $fetchWithAuth } = useNuxtApp();
+
+    const pagePromises = pages.map(page =>
+      $fetchWithAuth(`${baseUrl}?page=${page}`, { method: 'GET' }),
+    );
+
+    const responses = (await Promise.all(pagePromises)) as DownloadResponse[];
+
+    return responses.flatMap(response => response.data.data);
+  };
+
+  const fetchDownloadsStats = async (): Promise<DownloadStats> => {
     loading.value = true;
     error.value = null;
 
@@ -63,87 +102,54 @@ export function useDownloads() {
       const total = firstPageResponse.data.total;
 
       if (total === 0) {
-        stats.value = {
-          total: 0,
-          android: 0,
-          ios: 0,
-        };
+        stats.value = { total: 0, android: 0, ios: 0 };
         return stats.value;
       }
 
-      let androidCount = 0;
-      let iosCount = 0;
-      let itemsProcessed = 0;
-
-      for (const item of firstPageResponse.data.data) {
-        if (item.platform === 'ANDROID') {
-          androidCount++;
-        } else if (item.platform === 'IOS') {
-          iosCount++;
-        }
-        itemsProcessed++;
-      }
+      const firstPageItems = firstPageResponse.data.data;
+      const { android: firstPageAndroid, ios: firstPageIos } =
+        countPlatformItems(firstPageItems);
 
       const lastPage = firstPageResponse.data.last_page;
+      let androidCount = firstPageAndroid;
+      let iosCount = firstPageIos;
+      let itemsProcessed = firstPageItems.length;
 
-      if (lastPage > 1 && lastPage <= 3) {
-        const pagePromises = [];
+      if (lastPage > 1) {
+        let additionalItems: DownloadItem[] = [];
 
-        for (let page = 2; page <= lastPage; page++) {
-          pagePromises.push(
-            $fetchWithAuth(`/downloads?page=${page}`, {
-              method: 'GET',
-            }),
+        if (lastPage <= 3) {
+          const additionalPages = Array.from(
+            { length: lastPage - 1 },
+            (_, i) => i + 2,
+          );
+          additionalItems = await fetchAdditionalPages(
+            additionalPages,
+            '/downloads',
+          );
+        } else {
+          const middlePage = Math.ceil(lastPage / 2);
+          const pagesToFetch = [middlePage, lastPage].filter(p => p !== 1);
+          additionalItems = await fetchAdditionalPages(
+            pagesToFetch,
+            '/downloads',
           );
         }
 
-        const responses = (await Promise.all(
-          pagePromises,
-        )) as DownloadResponse[];
+        const { android, ios } = countPlatformItems(additionalItems);
+        androidCount += android;
+        iosCount += ios;
+        itemsProcessed += additionalItems.length;
+      }
 
-        for (const response of responses) {
-          for (const item of response.data.data) {
-            if (item.platform === 'ANDROID') {
-              androidCount++;
-            } else if (item.platform === 'IOS') {
-              iosCount++;
-            }
-            itemsProcessed++;
-          }
-        }
-
+      if (lastPage <= 3) {
         stats.value = {
           total,
           android: androidCount,
           ios: iosCount,
         };
-      } else if (lastPage > 3) {
-        const middlePage = Math.ceil(lastPage / 2);
-
-        const pages = [middlePage, lastPage];
-        const uniquePages = pages.filter(p => p !== 1);
-
-        const pagePromises = uniquePages.map(page =>
-          $fetchWithAuth(`/downloads?page=${page}`, {
-            method: 'GET',
-          }),
-        );
-
-        const responses = (await Promise.all(
-          pagePromises,
-        )) as DownloadResponse[];
-
-        for (const response of responses) {
-          for (const item of response.data.data) {
-            if (item.platform === 'ANDROID') {
-              androidCount++;
-            } else if (item.platform === 'IOS') {
-              iosCount++;
-            }
-            itemsProcessed++;
-          }
-        }
-
+      } else {
+        // Caso contrário, extrapolamos baseado na amostra
         const sampleAndroidRatio = androidCount / itemsProcessed;
         const sampleIosRatio = iosCount / itemsProcessed;
 
@@ -151,12 +157,6 @@ export function useDownloads() {
           total,
           android: Math.round(total * sampleAndroidRatio),
           ios: Math.round(total * sampleIosRatio),
-        };
-      } else {
-        stats.value = {
-          total,
-          android: androidCount,
-          ios: iosCount,
         };
       }
 

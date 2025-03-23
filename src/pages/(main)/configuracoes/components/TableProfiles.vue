@@ -28,12 +28,12 @@
           v-for="(profile, index) in profilesData.data"
           :key="profile.id"
           :class="index % 2 === 0 ? 'bg-background' : 'bg-card'">
-          <TableCell class="align-middle font-medium text-nowrap py-1.5">{{
-            profile.name
-          }}</TableCell>
-          <TableCell class="align-middle font-medium text-nowrap py-1.5">{{
-            profile.total_users
-          }}</TableCell>
+          <TableCell class="align-middle font-medium text-nowrap py-1.5">
+            {{ profile.name }}
+          </TableCell>
+          <TableCell class="align-middle font-medium text-nowrap py-1.5">
+            {{ profile.total_users }}
+          </TableCell>
           <TableCell class="align-middle py-1.5">
             <div class="flex gap-2.5">
               <Badge v-if="hasFivePermissions(profile.permissions)">
@@ -52,7 +52,9 @@
             </div>
           </TableCell>
           <TableCell class="w-10 bg-card text-right align-middle px-1 py-1.5">
-            <Dialog v-model:open="editDialogOpenMap[profile.id]">
+            <Dialog
+              :open="openDialogId === profile.id"
+              @update:open="updateDialogState($event, profile.id)">
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <NuxtImg
@@ -65,7 +67,8 @@
 
               <EditProfileDialog
                 :profile="profile"
-                v-model:open="editDialogOpenMap[profile.id]"
+                :open="openDialogId === profile.id"
+                @update:open="updateDialogState($event, profile.id)"
                 @profile-updated="onProfileUpdated" />
             </Dialog>
           </TableCell>
@@ -76,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -119,6 +122,12 @@ const props = defineProps<{
 
 const emit = defineEmits(['refreshData']);
 
+const openDialogId = ref<number | null>(null);
+
+const updateDialogState = (isOpen: boolean, profileId: number) => {
+  openDialogId.value = isOpen ? profileId : null;
+};
+
 function onProfileUpdated() {
   emit('refreshData');
 }
@@ -127,7 +136,6 @@ function hasFivePermissions(permissions: ApiProfile['permissions']) {
   if (permissions.length !== 5) return false;
 
   const expectedIds = new Set([1, 2, 3, 4, 5]);
-
   const actualIds = new Set(permissions.map(p => p.id));
 
   return (
@@ -135,6 +143,4 @@ function hasFivePermissions(permissions: ApiProfile['permissions']) {
     [...expectedIds].every(id => actualIds.has(id))
   );
 }
-
-const editDialogOpenMap = ref<Record<number, boolean>>({});
 </script>

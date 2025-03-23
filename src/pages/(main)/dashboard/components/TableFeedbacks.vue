@@ -5,11 +5,11 @@
         <TableRow>
           <TableHead class="min-w-[300px] pl-0">Avaliação</TableHead>
           <TableHead class="min-w-[100px] 2xl:min-w-[120px]">Data</TableHead>
-          <TableHead class="min-w-[100px] 2xl:min-w-[120px]">
-            Avaliação
-          </TableHead>
-          <TableHead class="min-w-[300px]"> Melhorias </TableHead>
-          <TableHead class="2xl:min-w-[120px]"> Plataforma </TableHead>
+          <TableHead class="min-w-[100px] 2xl:min-w-[120px]"
+            >Avaliação</TableHead
+          >
+          <TableHead class="min-w-[300px]">Melhorias</TableHead>
+          <TableHead class="2xl:min-w-[120px]">Plataforma</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -49,7 +49,7 @@
               <template v-if="feedback.improvements.length > 0">
                 <div class="line-clamp-2 hover:line-clamp-none">
                   <span
-                    v-for="(improvement, index) in feedback.improvements"
+                    v-for="improvement in feedback.improvements"
                     :key="improvement"
                     class="block mb-1">
                     {{ improvement }}
@@ -131,7 +131,6 @@ const feedbacks = ref<Feedback[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-// Configuração de paginação
 const pagination = ref({
   currentPage: 1,
   lastPage: 1,
@@ -139,109 +138,88 @@ const pagination = ref({
   total: 0,
 });
 
-// Função para determinar quais páginas exibir na paginação
 const displayedPages = computed(() => {
-  const totalPages = pagination.value.lastPage;
-  const currentPage = pagination.value.currentPage;
+  const { lastPage, currentPage } = pagination.value;
 
-  if (totalPages <= 7) {
-    // Se tiver 7 páginas ou menos, mostra todas
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  if (lastPage <= 7) {
+    return Array.from({ length: lastPage }, (_, i) => i + 1);
   }
 
-  // Sempre mostra a primeira página, a última página, a atual e uma ou duas páginas antes e depois
   const pages = [1];
 
-  // Adiciona "..." se necessário antes da página atual
   if (currentPage > 3) {
-    pages.push(-1); // -1 representa "..."
+    pages.push(-1);
   }
 
-  // Calcula o range ao redor da página atual
   const startPage = Math.max(2, currentPage - 1);
-  const endPage = Math.min(totalPages - 1, currentPage + 1);
+  const endPage = Math.min(lastPage - 1, currentPage + 1);
 
-  // Adiciona as páginas ao redor da atual
   for (let i = startPage; i <= endPage; i++) {
     pages.push(i);
   }
 
-  // Adiciona "..." se necessário depois da página atual
-  if (currentPage < totalPages - 2) {
-    pages.push(-2); // -2 representa "..." após a página atual
+  if (currentPage < lastPage - 2) {
+    pages.push(-2);
   }
 
-  // Adiciona a última página se não for a mesma que a endPage
-  if (totalPages > 1) {
-    pages.push(totalPages);
+  if (lastPage > 1) {
+    pages.push(lastPage);
   }
 
   return pages;
 });
 
-// Função para mudar de página
 const changePage = (page: number) => {
   pagination.value.currentPage = page;
   loadFeedbacksData();
 };
 
-// Função para mapear os dados de avaliações para o formato da tabela
-const mapEvaluationsToFeedbacks = (evaluations: EvaluationItem[]) => {
-  return evaluations.map((item: EvaluationItem) => {
-    // Formata a data (ex: 2025-03-19T15:50:19.000000Z -> 19/03/25)
-    const dateObj = new Date(item.created_at);
-    const formattedDate = dateObj.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit',
-    });
+const mapEvaluationsToFeedbacks = (
+  evaluations: EvaluationItem[],
+): Feedback[] => {
+  return evaluations.map(item => ({
+    id: item.id,
+    avaliation: item.description || '',
+    date: formatDate(item.created_at),
+    rating: String(item.evaluation || item.score || '0'),
+    improvements: extractImprovements(item.improvements),
+    platform: item.platform === 'ANDROID' ? 'Android' : 'IOS',
+  }));
+};
 
-    // Extrai as melhorias do item, se existirem
-    const improvements = item.improvements
-      ? Array.isArray(item.improvements)
-        ? item.improvements
-        : typeof item.improvements === 'string'
-        ? [item.improvements]
-        : []
-      : [];
-
-    return {
-      id: item.id,
-      avaliation: item.description || '',
-      date: formattedDate,
-      rating: String(item.evaluation || item.score || '0'),
-      improvements: improvements,
-      platform: item.platform === 'ANDROID' ? 'Android' : 'IOS',
-    };
+const formatDate = (dateString: string): string => {
+  const dateObj = new Date(dateString);
+  return dateObj.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
   });
 };
 
-// Função para buscar os dados para a tabela de feedbacks
+const extractImprovements = (improvements: any): string[] => {
+  if (!improvements) return [];
+
+  if (Array.isArray(improvements)) {
+    return improvements;
+  }
+
+  return typeof improvements === 'string' ? [improvements] : [];
+};
+
 const loadFeedbacksData = async () => {
   loading.value = true;
   error.value = null;
 
   try {
     const { $fetchWithAuth } = useNuxtApp();
-
-    // Buscar dados com paginação
     const response = (await $fetchWithAuth(
       `/evaluations?page=${pagination.value.currentPage}`,
-      {
-        method: 'GET',
-      },
+      { method: 'GET' },
     )) as any;
 
-    // Atualiza informações de paginação
-    if (response && response.data) {
-      pagination.value = {
-        currentPage: response.data.current_page || 1,
-        lastPage: response.data.last_page || 1,
-        perPage: response.data.per_page || 15,
-        total: response.data.total || 0,
-      };
+    if (response?.data) {
+      updatePaginationInfo(response.data);
 
-      // Se a resposta tiver os dados no formato esperado
       if (Array.isArray(response.data.data)) {
         feedbacks.value = mapEvaluationsToFeedbacks(response.data.data);
       } else {
@@ -251,21 +229,30 @@ const loadFeedbacksData = async () => {
       error.value = 'Estrutura de resposta inválida';
     }
   } catch (err: any) {
-    // Mostrar mensagem detalhada do erro
-    if (err.data && err.data.message) {
-      error.value = `Erro: ${err.data.message}`;
-    } else if (err.message) {
-      error.value = `Erro: ${err.message}`;
-    } else {
-      error.value = 'Falha ao carregar feedbacks';
-    }
+    handleError(err);
   } finally {
     loading.value = false;
   }
 };
 
-// Carrega os dados quando o componente for montado
-onMounted(() => {
-  loadFeedbacksData();
-});
+const updatePaginationInfo = (data: any) => {
+  pagination.value = {
+    currentPage: data.current_page || 1,
+    lastPage: data.last_page || 1,
+    perPage: data.per_page || 15,
+    total: data.total || 0,
+  };
+};
+
+const handleError = (err: any) => {
+  if (err.data?.message) {
+    error.value = `Erro: ${err.data.message}`;
+  } else if (err.message) {
+    error.value = `Erro: ${err.message}`;
+  } else {
+    error.value = 'Falha ao carregar feedbacks';
+  }
+};
+
+onMounted(loadFeedbacksData);
 </script>

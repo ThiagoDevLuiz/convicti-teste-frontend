@@ -33,7 +33,6 @@ export interface ErrorResponse {
   };
 }
 
-// Nova interface para resposta de estatísticas
 export interface ErrorStatsResponse {
   total: number;
   platforms: {
@@ -43,7 +42,14 @@ export interface ErrorStatsResponse {
   variation: number;
 }
 
-export function useErrors() {
+interface ErrorUtils {
+  stats: Ref<ErrorStats>;
+  loading: Ref<boolean>;
+  error: Ref<string | null>;
+  fetchErrorsStats: () => Promise<ErrorStats>;
+}
+
+export function useErrors(): ErrorUtils {
   const stats = ref<ErrorStats>({
     total: 0,
     android: 0,
@@ -54,7 +60,39 @@ export function useErrors() {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchErrorsStats = async () => {
+  const countPlatformItems = (
+    items: ErrorItem[],
+  ): { android: number; ios: number } => {
+    let androidCount = 0;
+    let iosCount = 0;
+
+    for (const item of items) {
+      if (item.platform === 'ANDROID') {
+        androidCount++;
+      } else if (item.platform === 'IOS') {
+        iosCount++;
+      }
+    }
+
+    return { android: androidCount, ios: iosCount };
+  };
+
+  const fetchAdditionalPages = async (
+    pages: number[],
+    baseUrl: string,
+  ): Promise<ErrorItem[]> => {
+    const { $fetchWithAuth } = useNuxtApp();
+
+    const pagePromises = pages.map(page =>
+      $fetchWithAuth(`${baseUrl}?page=${page}`, { method: 'GET' }),
+    );
+
+    const responses = (await Promise.all(pagePromises)) as ErrorResponse[];
+
+    return responses.flatMap(response => response.data.data);
+  };
+
+  const fetchErrorsStats = async (): Promise<ErrorStats> => {
     loading.value = true;
     error.value = null;
 
@@ -77,76 +115,49 @@ export function useErrors() {
         return stats.value;
       }
 
-      let androidCount = 0;
-      let iosCount = 0;
-      let itemsProcessed = 0;
-
-      for (const item of firstPageResponse.data.data) {
-        if (item.platform === 'ANDROID') {
-          androidCount++;
-        } else if (item.platform === 'IOS') {
-          iosCount++;
-        }
-        itemsProcessed++;
-      }
+      const firstPageItems = firstPageResponse.data.data;
+      const { android: firstPageAndroid, ios: firstPageIos } =
+        countPlatformItems(firstPageItems);
 
       const lastPage = firstPageResponse.data.last_page;
+      let androidCount = firstPageAndroid;
+      let iosCount = firstPageIos;
+      let itemsProcessed = firstPageItems.length;
 
-      if (lastPage > 1 && lastPage <= 3) {
-        const pagePromises = [];
+      if (lastPage > 1) {
+        let additionalItems: ErrorItem[] = [];
 
-        for (let page = 2; page <= lastPage; page++) {
-          pagePromises.push(
-            $fetchWithAuth(`/errors?page=${page}`, {
-              method: 'GET',
-            }),
+        if (lastPage <= 3) {
+          const additionalPages = Array.from(
+            { length: lastPage - 1 },
+            (_, i) => i + 2,
           );
+          additionalItems = await fetchAdditionalPages(
+            additionalPages,
+            '/errors',
+          );
+        } else {
+          const middlePage = Math.ceil(lastPage / 2);
+          const pagesToFetch = [middlePage, lastPage].filter(p => p !== 1);
+          additionalItems = await fetchAdditionalPages(pagesToFetch, '/errors');
         }
 
-        const responses = (await Promise.all(pagePromises)) as ErrorResponse[];
+        const { android, ios } = countPlatformItems(additionalItems);
+        androidCount += android;
+        iosCount += ios;
+        itemsProcessed += additionalItems.length;
+      }
 
-        for (const response of responses) {
-          for (const item of response.data.data) {
-            if (item.platform === 'ANDROID') {
-              androidCount++;
-            } else if (item.platform === 'IOS') {
-              iosCount++;
-            }
-            itemsProcessed++;
-          }
-        }
+      const variation = -5;
 
+      if (lastPage <= 3) {
         stats.value = {
           total,
           android: androidCount,
           ios: iosCount,
-          variation: -5,
+          variation,
         };
-      } else if (lastPage > 3) {
-        const middlePage = Math.ceil(lastPage / 2);
-
-        const pages = [middlePage, lastPage];
-        const uniquePages = pages.filter(p => p !== 1);
-
-        const pagePromises = uniquePages.map(page =>
-          $fetchWithAuth(`/errors?page=${page}`, {
-            method: 'GET',
-          }),
-        );
-
-        const responses = (await Promise.all(pagePromises)) as ErrorResponse[];
-
-        for (const response of responses) {
-          for (const item of response.data.data) {
-            if (item.platform === 'ANDROID') {
-              androidCount++;
-            } else if (item.platform === 'IOS') {
-              iosCount++;
-            }
-            itemsProcessed++;
-          }
-        }
-
+      } else {
         const sampleAndroidRatio = androidCount / itemsProcessed;
         const sampleIosRatio = iosCount / itemsProcessed;
 
@@ -154,14 +165,7 @@ export function useErrors() {
           total,
           android: Math.round(total * sampleAndroidRatio),
           ios: Math.round(total * sampleIosRatio),
-          variation: -5,
-        };
-      } else {
-        stats.value = {
-          total,
-          android: androidCount,
-          ios: iosCount,
-          variation: -5,
+          variation,
         };
       }
 

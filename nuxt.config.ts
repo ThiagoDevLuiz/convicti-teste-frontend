@@ -54,13 +54,10 @@ export default defineNuxtConfig({
   },
 
   shadcn: {
-    /**
-     * Prefix for all the imported components
-     */
     prefix: '',
 
     componentDir: 'src/components/ui',
   },
 
-  compatibilityDate: '2025-03-21',
+  compatibilityDate: '2025-03-22',
 });
