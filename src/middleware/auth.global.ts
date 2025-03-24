@@ -10,6 +10,10 @@ export default defineNuxtRouteMiddleware(async to => {
       return handleLoginRoute(authStore);
     }
 
+    if (to.path === '/') {
+      return navigateTo('/dashboard');
+    }
+
     return await handleProtectedRoute(authStore);
   } catch (error) {
     return navigateTo('/login');
